@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meteo</title>
+    <link href="./output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css" integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body{
+            background: rgb(131,58,180);
+            background: linear-gradient(90deg, rgba(131,58,180,1) 0%, rgba(253,29,29,1) 50%, rgba(252,176,69,1) 100%);
+        }
+        .bg-theme-primary{
+            background-color: #04263e;
+        }
+        .bg-loupe{
+            background-color: #dcf4ff;
+        }
+        input{
+            outline: none;
+            border: none;
+        }
+        i , button{
+            cursor: pointer;
+        } 
+        .card{
+            animation: yoyo 1.3s;
+        }
+
+        @keyframes yoyo {
+            0%{
+                opacity: 0;
+                transform: translateY(100px);
+            }
+
+            100%{
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+    </style>
+</head>
+<body class="h-screen flex justify-center items-center p-3">
+    <div id="container" class="card bg-white shadow-2xl rounded-xl py-6 px-6 text-center overflow-hidden" style="height: 5rem;">
+        <div class="saisie text-start mb-5 flex items-center">
+            <i class="fa-solid fa-location-dot mr-1"></i>
+            <input type="text" id="input" placeholder="Enter your localisation" class="flex-grow py-1 px-2">
+            <div id="loupe" class="bg-loupe rounded-full w-9 h-9 p-1 flex justify-center items-center cursor-pointer"><i class="fa-solid fa-magnifying-glass"></i></div>
+        </div>
+
+        <div id="img-box" class="img bg-cover bg-center w-72 h-64">
+            <img id="img" src="../img/404.png" alt="">
+        </div>
+
+        <p id="parag" class="para text-sm mb-9">Oups !!. Localisation not founded</p>
+
+        <div class="info text-start flex justify-center gap-x-28 mb-4">
+            <div class="component-humidity flex items-center">
+                <i class="fa-solid fa-water mr-2 text-2xl mt-2"></i>
+                <div class="humidity">
+                    <p id="humid" class="pourcentage text-xl font-semibold">0%</p>
+                    <p class="text-xs font-semibold">Humidity</p>
+                </div>
+            </div>
+
+            <div class="component-wind flex items-center">
+                <i class="fa-solid fa-wind mr-2 mt-2 text-2xl"></i>
+                <div class="wind">
+                    <p id="vent" class="speed text-xl font-semibold">0Km/h</p>
+                    <p class="text-xs font-semibold">Wind Speed</p>
+                </div>
+            </div>
+        </div>
+    </div> 
+    
+    <script>
+        let apiKey = "8034e775040a92a8c1237f163fe46adc" 
+
+
+
+
+let card = document.querySelector("#container")
+let loupe = document.querySelector('#loupe')
+let search = document.querySelector('#input')
+let imgBox = document.querySelector("#img-box")
+let img = document.querySelector("#img")
+let parag = document.querySelector('#parag')
+let humid = document.querySelector("#humid")
+let vent = document.querySelector("#vent")
+
+function designImgBox(Box){
+    Box.classList.remove("w-72" , "h-64")
+    Box.classList.add("w-52", "h-56" ,"mx-auto")
+}
+
+function designImgBoxInverse(Box){
+    Box.classList.add("w-72" , "h-64")
+    Box.classList.remove("w-52", "h-56" ,"mx-auto")
+}
+
+function celcus(degre){
+    return degre - 273.15
+}
+
+
+loupe.addEventListener('click' , () => {
+    card.removeAttribute("style")
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${search.value}&lang=fr&appid=${apiKey}`)
+    .then(respons => {
+    return respons.json()
+}).then(result => {
+    if(result.cod === '404' || search.value === 0){
+        img.src  = "img/404.png"
+        designImgBoxInverse(imgBox)
+        parag.classList.remove("text-center"  ,"font-bold")
+        parag.classList.add("text-sm", "mb-9")
+        parag.innerHTML = "Oups !!. Localisation not founded"
+
+        humid.innerHTML = "0%"
+        vent.innerHTML = "0Km/h"
+        return
+    }
+    switch(result.weather[0].main){
+        case "Clear" :
+            img.src = "img/clear.png"
+            designImgBox(imgBox)
+            break
+        case 'Rain':
+            img.src = 'img/rain.png'
+            designImgBox(imgBox)
+            break
+
+        case 'Snow':
+            img.src = 'img/snow.png'
+            designImgBox(imgBox)
+            break
+
+        case 'Clouds':
+            img.src = 'img/cloud.png'
+            designImgBox(imgBox)
+            break
+
+        case 'Haze':
+            img.src = 'img/mist.png'
+            designImgBox(imgBox)
+            break;
+
+        default:
+            img.src = ''
+    }
+    parag.innerHTML = ""
+
+    let desc = document.createElement("h3")
+    let temp =  document.createElement("label")
+    let span =  document.createElement("span")
+    parag.classList.add("text-center"  ,"font-bold")
+    desc.classList.add("text-lg" , "font-semibold")
+    temp.classList.add("text-2xl")
+    span.classList.add("text-sm" , "mb-2")
+
+
+    temp.appendChild(span)
+    parag.appendChild(temp)
+    parag.appendChild(desc)
+    desc.innerHTML = `${result.weather[0].description}`
+    temp.innerHTML = `${celcus(result.main.temp).toFixed(2)}°C`
+    span.innerHTML = "°C"
+
+    humid.innerHTML = `${result.main.humidity}%`
+    vent.innerHTML = `${result.wind.speed}Km/h`
+
+    console.log("ffff" , result)
+   })
+})
+
+
+
+    </script>
+</body>
+</html>
